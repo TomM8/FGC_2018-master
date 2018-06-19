@@ -50,6 +50,15 @@ import com.qualcomm.robotcore.util.Range;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
+/**
+ * Git Bash stuff:
+ * First go to the repository
+ * Then initialize git (git init)
+ * Then add (git add .)
+ * Then commit (git commit -m "")
+ * Then push to master (git push origin master) --> not necessary
+ */
+
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name="TeleOp", group="Iterative Opmode")
 //Disabled
 public class TeleOp extends OpMode
