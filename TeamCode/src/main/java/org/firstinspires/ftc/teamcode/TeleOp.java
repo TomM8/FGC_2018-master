@@ -124,10 +124,6 @@ public class TeleOp extends OpMode
         // - This requires no math, but it is hard to drive forward slowly and keep straight.
         // leftPower  = -gamepad1.left_stick_y ;
         // rightPower = -gamepad1.right_stick_y ;
-        // This is just a change to test through git bash
-        // Where are the changes
-        // To practice even more
-        // comment
 
         if(gamepad1.dpad_up){
             liftMotor.setPower(MOTOR_MAX);
