@@ -59,6 +59,7 @@ public class TeleOp extends OpMode
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
     private DcMotor liftMotor = null;
+    private DcMotor cageMotor = null;
 
     //Fields for setting power
     private double MOTOR_MAX = 1.0;
@@ -77,6 +78,7 @@ public class TeleOp extends OpMode
         leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
         rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
         liftMotor = hardwareMap.get(DcMotor.class, "lift_motor");
+        cageMotor = hardwareMap.get(DcMotor.class, "cage_motor");
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         leftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -106,6 +108,9 @@ public class TeleOp extends OpMode
      */
     @Override
     public void loop() {
+
+        //region Wheels
+
         // Setup a variable for each drive wheel to save power level for telemetry
         double leftPower;
         double rightPower;
@@ -125,25 +130,46 @@ public class TeleOp extends OpMode
         // leftPower  = -gamepad1.left_stick_y ;
         // rightPower = -gamepad1.right_stick_y ;
 
+        // Send calculated power to wheels
+        leftDrive.setPower(leftPower);
+        rightDrive.setPower(rightPower);
+
+        //endregion
+
+        //region liftMotor
+
+        double liftHeight;
+
         if(gamepad1.dpad_up){
             liftMotor.setPower(MOTOR_MAX);
+            liftHeight = liftMotor.getCurrentPosition();
         }
         else if(gamepad1.dpad_down){
             liftMotor.setPower(-MOTOR_MAX);
+            liftHeight = liftMotor.getCurrentPosition();
         }
         else {
             liftMotor.setPower(MOTOR_OFF);
         }
 
-        // Send calculated power to wheels
-        leftDrive.setPower(leftPower);
-        rightDrive.setPower(rightPower);
+        //endregion
 
+        //region cageMotor
 
+        if(gamepad1.right_trigger > gamepad1.left_trigger){
+            cageMotor.setPower(MOTOR_MAX);
+        }
+        else if(gamepad1.left_trigger > gamepad1.right_trigger){
+            cageMotor.setPower(-MOTOR_MAX);
+        }
+
+        //endregion
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
+        telemetry.addData("liftMotor", "Height: " + liftMotor.getCurrentPosition());
+        telemetry.addData("cageMotor", "Position: " + cageMotor.getCurrentPosition());
     }
 
     /*
