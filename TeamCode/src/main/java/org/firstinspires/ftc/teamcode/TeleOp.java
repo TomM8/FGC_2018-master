@@ -55,7 +55,7 @@ import com.qualcomm.robotcore.util.Range;
  * First go to the repository
  * Then initialize git (git init)
  * Then add (git add .)
- * Then commit (git commit -m "")
+ * Then commit (git commit -m "")-
  * Then push to master (git push origin master) --> not necessary
  */
 
@@ -68,7 +68,7 @@ public class TeleOp extends OpMode
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
     private DcMotor liftMotor = null;
-    private DcMotor cageMotor = null;
+    private DcMotor armMotor = null;
 
     //Fields for setting power
     private double MOTOR_MAX = 1.0;
@@ -87,7 +87,7 @@ public class TeleOp extends OpMode
         leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
         rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
         liftMotor = hardwareMap.get(DcMotor.class, "lift_motor");
-        cageMotor = hardwareMap.get(DcMotor.class, "cage_motor");
+        armMotor = hardwareMap.get(DcMotor.class, "arm_motor");
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         leftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -149,11 +149,11 @@ public class TeleOp extends OpMode
 
         double liftHeight;
 
-        if(gamepad1.dpad_up){
+        if(gamepad1.dpad_up && !gamepad1.a){
             liftMotor.setPower(MOTOR_MAX);
             liftHeight = liftMotor.getCurrentPosition();
         }
-        else if(gamepad1.dpad_down){
+        else if(gamepad1.dpad_down && !gamepad1.a){
             liftMotor.setPower(-MOTOR_MAX);
             liftHeight = liftMotor.getCurrentPosition();
         }
@@ -163,22 +163,26 @@ public class TeleOp extends OpMode
 
         //endregion
 
-        //region cageMotor
+        //region armMotor
 
-        if(gamepad1.right_trigger > gamepad1.left_trigger){
-            cageMotor.setPower(MOTOR_MAX);
+        if(gamepad1.a && gamepad1.dpad_up){
+            armMotor.setPower(MOTOR_MAX);
         }
-        else if(gamepad1.left_trigger > gamepad1.right_trigger){
-            cageMotor.setPower(-MOTOR_MAX);
+        else if(gamepad1.a && gamepad1.dpad_down){
+            armMotor.setPower(-MOTOR_MAX);
+        }
+        else{
+            armMotor.setPower(MOTOR_OFF);
         }
 
         //endregion
+
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
         telemetry.addData("liftMotor", "Height: " + liftMotor.getCurrentPosition());
-        telemetry.addData("cageMotor", "Position: " + cageMotor.getCurrentPosition());
+        //telemetry.addData("cageMotor", "Position: " + cageMotor.getCurrentPosition());
     }
 
     /*
