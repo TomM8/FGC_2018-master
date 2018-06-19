@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -57,6 +58,11 @@ public class TeleOp extends OpMode
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
+    private DcMotor liftMotor = null;
+
+    //Fields for setting power
+    private double MOTOR_MAX = 1.0;
+    private double MOTOR_OFF = 0.0;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -70,7 +76,7 @@ public class TeleOp extends OpMode
         // step (using the FTC Robot Controller app on the phone).
         leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
         rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
-
+        liftMotor = hardwareMap.get(DcMotor.class, "lift_motor");
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         leftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -119,9 +125,21 @@ public class TeleOp extends OpMode
         // leftPower  = -gamepad1.left_stick_y ;
         // rightPower = -gamepad1.right_stick_y ;
 
+        if(gamepad1.dpad_up){
+            liftMotor.setPower(MOTOR_MAX);
+        }
+        else if(gamepad1.dpad_down){
+            liftMotor.setPower(-MOTOR_MAX);
+        }
+        else {
+            liftMotor.setPower(MOTOR_OFF);
+        }
+
         // Send calculated power to wheels
         leftDrive.setPower(leftPower);
         rightDrive.setPower(rightPower);
+
+
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
