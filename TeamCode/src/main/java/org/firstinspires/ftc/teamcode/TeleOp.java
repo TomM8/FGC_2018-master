@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -69,6 +70,9 @@ public class TeleOp extends OpMode
     private DcMotor rightDrive = null;
     private DcMotor liftMotor = null;
     private DcMotor armMotor = null;
+    private Servo armLeftServo = null;
+    private Servo armRightServo = null;
+    private TouchSensor touchSensor = null;
 
     //Fields for setting power
     private double MOTOR_MAX = 1.0;
@@ -88,6 +92,10 @@ public class TeleOp extends OpMode
         rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
         liftMotor = hardwareMap.get(DcMotor.class, "lift_motor");
         armMotor = hardwareMap.get(DcMotor.class, "arm_motor");
+        armRightServo = hardwareMap.get(Servo.class, "arm_right_servo");
+        armLeftServo = hardwareMap.get(Servo.class, "arm_left_servo");
+        touchSensor = hardwareMap.get(TouchSensor.class, "touch_sensor");
+
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         leftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -150,8 +158,10 @@ public class TeleOp extends OpMode
         double liftHeight;
 
         if(gamepad1.dpad_up && !gamepad1.a){
-            liftMotor.setPower(MOTOR_MAX);
-            liftHeight = liftMotor.getCurrentPosition();
+            while(!touchSensor.isPressed()) {
+                liftMotor.setPower(MOTOR_MAX);
+                liftHeight = liftMotor.getCurrentPosition();
+            }
         }
         else if(gamepad1.dpad_down && !gamepad1.a){
             liftMotor.setPower(-MOTOR_MAX);
@@ -177,11 +187,30 @@ public class TeleOp extends OpMode
 
         //endregion
 
+        //region servoMotors
+
+        double leftServoPosition = armLeftServo.getPosition();
+        double rightServoPosition = armRightServo.getPosition();
+
+        if(gamepad1.right_bumper){
+            leftServoPosition += 1;
+            rightServoPosition += 1;
+        }
+        else if(gamepad1.left_bumper){
+            leftServoPosition -= 1;
+            rightServoPosition -= 1;
+        }
+
+
+        //endregion
+
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
         telemetry.addData("liftMotor", "Height: " + liftMotor.getCurrentPosition());
+        telemetry.addData("armLeftServo", "position: " + leftServoPosition);
+        telemetry.addData("armRightServo", "position: " + rightServoPosition);
         //telemetry.addData("cageMotor", "Position: " + cageMotor.getCurrentPosition());
     }
 
