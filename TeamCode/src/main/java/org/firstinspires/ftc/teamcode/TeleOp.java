@@ -73,11 +73,22 @@ public class TeleOp extends OpMode
     private Servo armLeftServo = null;
     private Servo armRightServo = null;
     private Servo armMainServo = null;
-    //private TouchSensor touchSensor = null;
+    private TouchSensor touchSensor = null;
+    private DcMotor windMillMotor = null;
+
 
     //Fields for setting power
     private double MOTOR_MAX = 1.0;
     private double MOTOR_OFF = 0.0;
+    private double MOTOR_HALF = 0.5;
+    private static final double ARM_HOME = 0.0;
+    private static final double ARM_MAX = 1.0;
+    private static final double ARM_MIN = 0.0;
+    final double ARM_SPEED = 0.01;
+    private double mainServoPosition = ARM_HOME;
+    private double leftServoPosition = ARM_HOME;
+    private double rightServoPosition = ARM_HOME;
+    private boolean buttonPressed = false;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -95,8 +106,9 @@ public class TeleOp extends OpMode
         //armMotor = hardwareMap.get(DcMotor.class, "arm_motor");
         armRightServo = hardwareMap.get(Servo.class, "arm_right_servo");
         armLeftServo = hardwareMap.get(Servo.class, "arm_left_servo");
-        //touchSensor = hardwareMap.get(TouchSensor.class, "touch_sensor");
+        touchSensor = hardwareMap.get(TouchSensor.class, "touch_sensor");
         armMainServo = hardwareMap.get(Servo.class, "arm_main_servo");
+        windMillMotor = hardwareMap.get(DcMotor.class, "wind_mill_motor");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -106,9 +118,10 @@ public class TeleOp extends OpMode
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
 
-        armMainServo.setPosition(0);
-        armLeftServo.setPosition(0);
-        armRightServo.setPosition(0);
+        armMainServo.setPosition(ARM_HOME);
+        armLeftServo.setPosition(ARM_HOME);
+        armRightServo.setPosition(ARM_HOME);
+
     }
 
     /*
@@ -164,12 +177,20 @@ public class TeleOp extends OpMode
         double liftHeight;
         //double liftPower;
 
-        if(gamepad1.dpad_up){
-            liftMotor.setPower(MOTOR_MAX);
-            liftHeight = liftMotor.getCurrentPosition();
+        if(touchSensor.isPressed()){
+            buttonPressed = true;
+        }
+
+
+        if(gamepad1.dpad_up && !touchSensor.isPressed()){
+            liftMotor.setPower(MOTOR_HALF);
+            //liftHeight = liftMotor.getCurrentPosition();
+        }
+        else if(gamepad1.dpad_up && touchSensor.isPressed()){
+            liftMotor.setPower(MOTOR_OFF);
         }
         else if(gamepad1.dpad_down){
-            liftMotor.setPower(-MOTOR_MAX);
+            liftMotor.setPower(-MOTOR_HALF);
             liftHeight = liftMotor.getCurrentPosition();
         }
         else {
@@ -195,20 +216,17 @@ public class TeleOp extends OpMode
 
         //region armServoMotors
 
-        double leftServoPosition = armLeftServo.getPosition();
-        double rightServoPosition = armRightServo.getPosition();
-
         if(gamepad1.x){
-            leftServoPosition += 0.1;
-            rightServoPosition -= 0.1;
+            leftServoPosition += ARM_SPEED;
+            rightServoPosition -= ARM_SPEED;
         }
         else if(gamepad1.b){
-            leftServoPosition -= 0.1;
-            rightServoPosition += 0.1;
+            leftServoPosition -= ARM_SPEED;
+            rightServoPosition += ARM_SPEED;
         }
-        else {
 
-        }
+        rightServoPosition = Range.clip(rightServoPosition, ARM_MIN, ARM_MAX);
+        leftServoPosition = Range.clip(leftServoPosition, ARM_MIN, ARM_MAX);
         armRightServo.setPosition(rightServoPosition);
         armLeftServo.setPosition(leftServoPosition);
 
@@ -216,18 +234,27 @@ public class TeleOp extends OpMode
 
         //region mainServoMotor
 
-        double mainServoPosition = armMainServo.getPosition();
-
         if(gamepad1.right_bumper){
-            mainServoPosition += 0.1;
+            mainServoPosition += ARM_SPEED;
         }
         else if(gamepad1.left_bumper){
-            mainServoPosition -= 0.1;
+            mainServoPosition -= ARM_SPEED;
+        }
+
+        mainServoPosition = Range.clip(mainServoPosition, ARM_MIN, ARM_MAX);
+        armMainServo.setPosition(mainServoPosition);
+
+
+        //endregion
+
+        //region windMillMotor
+
+        if(gamepad1.y && armMainServo.getPosition() >= 0.5){
+            windMillMotor.setPower(MOTOR_MAX);
         }
         else {
-
+            windMillMotor.setPower(MOTOR_OFF);
         }
-        armMainServo.setPosition(mainServoPosition);
 
         //endregion
 
@@ -238,7 +265,10 @@ public class TeleOp extends OpMode
         telemetry.addData("armLeftServo", "position: " + leftServoPosition);
         telemetry.addData("armRightServo", "position: " + rightServoPosition);
         telemetry.addData("armMainServo", "position" + mainServoPosition);
+        telemetry.addData("touchSensor", "touched? " + buttonPressed);
         //telemetry.addData("cageMotor", "Position: " + cageMotor.getCurrentPosition());
+
+        telemetry.addLine("poop");
     }
 
     /*
